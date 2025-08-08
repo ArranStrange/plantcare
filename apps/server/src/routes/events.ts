@@ -38,10 +38,21 @@ router.post("/", async (req, res) => {
   try {
     const { plantId, userId, type, date } = req.body;
 
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const defaultUser = await prisma.user.findFirst();
+      if (!defaultUser) {
+        return res
+          .status(400)
+          .json({ error: "No user found. Please create a user first." });
+      }
+      finalUserId = defaultUser.id;
+    }
+
     const event = await prisma.careEvent.create({
       data: {
         plantId,
-        userId: userId || (await prisma.user.findFirst())?.id || "",
+        userId: finalUserId,
         type,
         date: new Date(date),
         completed: false,
@@ -96,7 +107,11 @@ router.get("/", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
     const completed = req.query.completed === "true";
 

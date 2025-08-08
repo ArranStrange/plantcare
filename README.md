@@ -214,6 +214,12 @@ pnpm typecheck        # Type check all packages
 - `GET /api/weather?lat=&lon=` - Get weather data
 - `GET /api/weather/recommendations` - Get care recommendations
 
+**Trefle Plant Database:**
+
+- `GET /api/trefle/search?q=&page=&limit=` - Search plants by name, genus, or family
+- `GET /api/trefle/plant/:id` - Get detailed plant information
+- `GET /api/trefle/care/:id` - Get care recommendations for a specific plant
+
 **Rooms:**
 
 - `GET /api/rooms` - Get all rooms
@@ -230,6 +236,7 @@ pnpm typecheck        # Type check all packages
 ```bash
 DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/plantcare?retryWrites=true&w=majority"
 OPENWEATHER_API_KEY="your_api_key_here"
+TREFLE_API_KEY="your_trefle_api_key_here"
 PORT=3001
 NODE_ENV=production
 ```

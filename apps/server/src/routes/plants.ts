@@ -1,7 +1,30 @@
 import express from "express";
 import { prisma } from "../index";
-import { Plant, PlantWithRoom } from "@plantcare/types";
 import { addDays } from "../utils/dateUtils";
+
+// Define types locally to avoid dependency issues
+interface Plant {
+  id: string;
+  name: string;
+  species: string;
+  photoUrl?: string;
+  waterFrequency: number;
+  lastWatered?: string;
+  nextWaterDate?: string;
+  careNotes?: string | null;
+  roomId?: string | null;
+  userId: string;
+}
+
+interface Room {
+  id: string;
+  name: string;
+  userId: string;
+}
+
+interface PlantWithRoom extends Plant {
+  room?: Room;
+}
 
 const router = express.Router();
 
@@ -12,15 +35,19 @@ router.get("/", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
 
-    const sortBy = req.query.sortBy as string || 'name';
-    const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'asc';
+    const sortBy = (req.query.sortBy as string) || "name";
+    const sortOrder = (req.query.sortOrder as "asc" | "desc") || "asc";
 
-    let orderBy: any = { name: 'asc' };
+    let orderBy: any = { name: "asc" };
 
-    if (sortBy === 'watering') {
+    if (sortBy === "watering") {
       // Sort by watering priority: overdue first, then due today, then by next water date
       const plants = await prisma.plant.findMany({
         where: { userId },
@@ -39,7 +66,8 @@ router.get("/", async (req, res) => {
 
       const sortedPlants = plants.sort((a, b) => {
         // Plants without next water date go last
-        if (!a.nextWaterDate && !b.nextWaterDate) return a.name.localeCompare(b.name);
+        if (!a.nextWaterDate && !b.nextWaterDate)
+          return a.name.localeCompare(b.name);
         if (!a.nextWaterDate) return 1;
         if (!b.nextWaterDate) return -1;
 
@@ -49,10 +77,10 @@ router.get("/", async (req, res) => {
         // Overdue plants (before today) come first
         const aOverdue = aDate < today;
         const bOverdue = bDate < today;
-        
+
         if (aOverdue && !bOverdue) return -1;
         if (!aOverdue && bOverdue) return 1;
-        
+
         // If both overdue, sort by how overdue they are (most overdue first)
         if (aOverdue && bOverdue) {
           return aDate.getTime() - bDate.getTime();
@@ -61,7 +89,7 @@ router.get("/", async (req, res) => {
         // Due today plants come next
         const aDueToday = aDate >= today && aDate < tomorrow;
         const bDueToday = bDate >= today && bDate < tomorrow;
-        
+
         if (aDueToday && !bDueToday) return -1;
         if (!aDueToday && bDueToday) return 1;
 
@@ -73,7 +101,7 @@ router.get("/", async (req, res) => {
         id: plant.id,
         name: plant.name,
         species: plant.species,
-        photoUrl: plant.photoUrl,
+        photoUrl: plant.photoUrl || undefined,
         waterFrequency: plant.waterFrequency,
         lastWatered: plant.lastWatered?.toISOString(),
         nextWaterDate: plant.nextWaterDate?.toISOString(),
@@ -93,7 +121,7 @@ router.get("/", async (req, res) => {
     } else {
       // Default sorting by name or other fields
       orderBy = { [sortBy]: sortOrder };
-      
+
       const plants = await prisma.plant.findMany({
         where: { userId },
         include: {
@@ -106,7 +134,7 @@ router.get("/", async (req, res) => {
         id: plant.id,
         name: plant.name,
         species: plant.species,
-        photoUrl: plant.photoUrl,
+        photoUrl: plant.photoUrl || undefined,
         waterFrequency: plant.waterFrequency,
         lastWatered: plant.lastWatered?.toISOString(),
         nextWaterDate: plant.nextWaterDate?.toISOString(),
@@ -136,7 +164,11 @@ router.get("/sorted/watering", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
 
     const plants = await prisma.plant.findMany({
@@ -153,7 +185,8 @@ router.get("/sorted/watering", async (req, res) => {
 
     const sortedPlants = plants.sort((a, b) => {
       // Plants without next water date go last
-      if (!a.nextWaterDate && !b.nextWaterDate) return a.name.localeCompare(b.name);
+      if (!a.nextWaterDate && !b.nextWaterDate)
+        return a.name.localeCompare(b.name);
       if (!a.nextWaterDate) return 1;
       if (!b.nextWaterDate) return -1;
 
@@ -163,10 +196,10 @@ router.get("/sorted/watering", async (req, res) => {
       // Overdue plants (before today) come first
       const aOverdue = aDate < today;
       const bOverdue = bDate < today;
-      
+
       if (aOverdue && !bOverdue) return -1;
       if (!aOverdue && bOverdue) return 1;
-      
+
       // If both overdue, sort by how overdue they are (most overdue first)
       if (aOverdue && bOverdue) {
         return aDate.getTime() - bDate.getTime();
@@ -175,7 +208,7 @@ router.get("/sorted/watering", async (req, res) => {
       // Due today plants come next
       const aDueToday = aDate >= today && aDate < tomorrow;
       const bDueToday = bDate >= today && bDate < tomorrow;
-      
+
       if (aDueToday && !bDueToday) return -1;
       if (!aDueToday && bDueToday) return 1;
 
@@ -187,7 +220,7 @@ router.get("/sorted/watering", async (req, res) => {
       id: plant.id,
       name: plant.name,
       species: plant.species,
-      photoUrl: plant.photoUrl,
+      photoUrl: plant.photoUrl || undefined,
       waterFrequency: plant.waterFrequency,
       lastWatered: plant.lastWatered?.toISOString(),
       nextWaterDate: plant.nextWaterDate?.toISOString(),

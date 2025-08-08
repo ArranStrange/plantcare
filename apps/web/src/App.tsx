@@ -9,25 +9,45 @@ import Calendar from "./pages/Calendar";
 import AddPlant from "./pages/AddPlant";
 import Rooms from "./pages/Rooms";
 import PlantDetail from "./pages/PlantDetail";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import { ApiProvider } from "./contexts/ApiContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
     <ThemeProvider theme={plantCareTheme}>
       <CssBaseline />
-      <ApiProvider>
-        <Router>
-          <Layout>
+      <AuthProvider>
+        <ApiProvider>
+          <Router>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="/add-plant" element={<AddPlant />} />
-              <Route path="/rooms" element={<Rooms />} />
-              <Route path="/plant/:id" element={<PlantDetail />} />
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* Protected routes */}
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/calendar" element={<Calendar />} />
+                        <Route path="/add-plant" element={<AddPlant />} />
+                        <Route path="/rooms" element={<Rooms />} />
+                        <Route path="/plant/:id" element={<PlantDetail />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
-          </Layout>
-        </Router>
-      </ApiProvider>
+          </Router>
+        </ApiProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

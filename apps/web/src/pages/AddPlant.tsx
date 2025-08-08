@@ -36,6 +36,20 @@ interface PlantTemplate {
   photoUrl: string;
 }
 
+interface TreflePlant {
+  id: string;
+  name: string;
+  scientificName: string;
+  family: string | null;
+  genus: string | null;
+  imageUrl: string | null;
+  year: number | null;
+  edible: boolean | null;
+  ediblePart: string[] | null;
+  edibleDescription: string | null;
+  distribution: string | null;
+}
+
 // Mock plant templates - in a real app, this would come from an API
 const PLANT_TEMPLATES: PlantTemplate[] = [
   {
@@ -115,6 +129,13 @@ const AddPlant: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCustomForm, setShowCustomForm] = useState(false);
 
+  // Trefle API state
+  const [treflePlants, setTreflePlants] = useState<TreflePlant[]>([]);
+  const [trefleSearchQuery, setTrefleSearchQuery] = useState("");
+  const [trefleLoading, setTrefleLoading] = useState(false);
+  const [selectedTreflePlant, setSelectedTreflePlant] =
+    useState<TreflePlant | null>(null);
+
   const api = useApi();
   const navigate = useNavigate();
 
@@ -129,6 +150,41 @@ const AddPlant: React.FC = () => {
     } catch (err) {
       console.error("Failed to fetch rooms:", err);
     }
+  };
+
+  const searchTreflePlants = async (query: string) => {
+    if (!query.trim()) {
+      setTreflePlants([]);
+      return;
+    }
+
+    try {
+      setTrefleLoading(true);
+      const response = await api.searchPlants(query);
+      setTreflePlants(response.plants);
+    } catch (err) {
+      console.error("Failed to search Trefle plants:", err);
+      setError("Failed to search plants. Please try again.");
+    } finally {
+      setTrefleLoading(false);
+    }
+  };
+
+  const handleTreflePlantSelect = (plant: TreflePlant) => {
+    setSelectedTreflePlant(plant);
+    setCustomPlant({
+      name: plant.name,
+      species: plant.scientificName,
+      waterFrequency: 7, // Default value
+      careNotes: `Scientific name: ${plant.scientificName}${
+        plant.family ? `\nFamily: ${plant.family}` : ""
+      }${plant.genus ? `\nGenus: ${plant.genus}` : ""}${
+        plant.edibleDescription ? `\nEdible: ${plant.edibleDescription}` : ""
+      }`,
+      photoUrl: plant.imageUrl || "",
+      roomId: customPlant.roomId,
+    });
+    setShowCustomForm(true);
   };
 
   const filteredTemplates = PLANT_TEMPLATES.filter(
@@ -243,6 +299,105 @@ const AddPlant: React.FC = () => {
             >
               Create Custom Plant
             </Button>
+          </Paper>
+
+          {/* Trefle Plant Database Search */}
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              🌿 Search Plant Database
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+              Search our comprehensive plant database for detailed information
+            </Typography>
+
+            <TextField
+              fullWidth
+              placeholder="Search plants by name, genus, or family..."
+              value={trefleSearchQuery}
+              onChange={(e) => {
+                setTrefleSearchQuery(e.target.value);
+                if (e.target.value.length >= 3) {
+                  searchTreflePlants(e.target.value);
+                } else {
+                  setTreflePlants([]);
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
+            />
+
+            {trefleLoading && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            )}
+
+            {treflePlants.length > 0 && (
+              <Grid container spacing={2} sx={{ mt: 2 }}>
+                {treflePlants.slice(0, 6).map((plant) => (
+                  <Grid item xs={12} sm={6} md={4} key={plant.id}>
+                    <Card
+                      sx={{
+                        cursor: "pointer",
+                        transition: "transform 0.2s, box-shadow 0.2s",
+                        "&:hover": {
+                          transform: "translateY(-4px)",
+                          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                        },
+                      }}
+                      onClick={() => handleTreflePlantSelect(plant)}
+                    >
+                      <CardMedia
+                        component="img"
+                        height="120"
+                        image={
+                          plant.imageUrl ||
+                          "https://via.placeholder.com/300x200?text=No+Image"
+                        }
+                        alt={plant.name}
+                      />
+                      <CardContent sx={{ p: 2 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600, mb: 0.5 }}
+                        >
+                          {plant.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block", mb: 1 }}
+                        >
+                          {plant.scientificName}
+                        </Typography>
+                        {plant.family && (
+                          <Chip
+                            label={plant.family}
+                            size="small"
+                            variant="outlined"
+                            sx={{ mr: 0.5, mb: 0.5 }}
+                          />
+                        )}
+                        {plant.genus && (
+                          <Chip
+                            label={plant.genus}
+                            size="small"
+                            variant="outlined"
+                            sx={{ mr: 0.5, mb: 0.5 }}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </Paper>
 
           {/* Plant Templates */}

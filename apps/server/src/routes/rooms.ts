@@ -9,7 +9,11 @@ router.get("/", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
 
     const rooms = await prisma.room.findMany({
@@ -85,10 +89,21 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Room name is required" });
     }
 
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const defaultUser = await prisma.user.findFirst();
+      if (!defaultUser) {
+        return res
+          .status(400)
+          .json({ error: "No user found. Please create a user first." });
+      }
+      finalUserId = defaultUser.id;
+    }
+
     const room = await prisma.room.create({
       data: {
         name,
-        userId: userId || (await prisma.user.findFirst())?.id || "",
+        userId: finalUserId,
       },
     });
 

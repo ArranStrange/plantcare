@@ -1,10 +1,17 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import axios from 'axios';
-import { Plant, Room, CareEvent, WeatherData, CalendarEvent, PlantWithRoom } from '@plantcare/types';
+import React, { createContext, useContext, ReactNode } from "react";
+import axios from "axios";
+import {
+  Plant,
+  Room,
+  CareEvent,
+  WeatherData,
+  CalendarEvent,
+  PlantWithRoom,
+} from "@plantcare/types";
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: "/api",
   timeout: 10000,
 });
 
@@ -14,16 +21,21 @@ interface ApiService {
   getPlants: () => Promise<PlantWithRoom[]>;
   getPlantsSortedByWatering: () => Promise<PlantWithRoom[]>;
   getPlant: (id: string) => Promise<Plant>;
-  createPlant: (plant: Omit<Plant, 'id'>) => Promise<Plant>;
+  createPlant: (plant: Omit<Plant, "id">) => Promise<Plant>;
   updatePlant: (id: string, plant: Partial<Plant>) => Promise<Plant>;
   deletePlant: (id: string) => Promise<void>;
   waterPlant: (id: string) => Promise<Plant>;
-  getPlantTips: (id: string) => Promise<{ plantId: string; plantName: string; tip: string; condition: string }>;
+  getPlantTips: (id: string) => Promise<{
+    plantId: string;
+    plantName: string;
+    tip: string;
+    condition: string;
+  }>;
 
   // Rooms
   getRooms: () => Promise<Room[]>;
   getRoom: (id: string) => Promise<Room>;
-  createRoom: (room: Omit<Room, 'id'>) => Promise<Room>;
+  createRoom: (room: Omit<Room, "id">) => Promise<Room>;
   updateRoom: (id: string, room: Partial<Room>) => Promise<Room>;
   deleteRoom: (id: string) => Promise<void>;
 
@@ -31,15 +43,74 @@ interface ApiService {
   getEvents: (completed?: boolean) => Promise<CareEvent[]>;
   getCalendarEvents: (start: string, end: string) => Promise<CalendarEvent[]>;
   completeEvent: (id: string) => Promise<CareEvent>;
-  createEvent: (event: Omit<CareEvent, 'id'>) => Promise<CareEvent>;
+  createEvent: (event: Omit<CareEvent, "id">) => Promise<CareEvent>;
   getPlantEvents: (plantId: string, limit?: number) => Promise<CareEvent[]>;
   getUpcomingEvents: () => Promise<CareEvent[]>;
 
   // Weather
   getWeather: (lat: number, lon: number) => Promise<WeatherData>;
-  getWeatherRecommendations: (lat?: number, lon?: number) => Promise<{
+  getWeatherRecommendations: (
+    lat?: number,
+    lon?: number
+  ) => Promise<{
     weather: WeatherData;
     recommendations: Array<{ type: string; message: string; icon: string }>;
+  }>;
+
+  // Trefle Plant Database
+  searchPlants: (
+    query: string,
+    page?: number,
+    limit?: number
+  ) => Promise<{
+    plants: Array<{
+      id: string;
+      name: string;
+      scientificName: string;
+      family: string | null;
+      genus: string | null;
+      imageUrl: string | null;
+      year: number | null;
+      edible: boolean | null;
+      ediblePart: string[] | null;
+      edibleDescription: string | null;
+      distribution: string | null;
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      links: any;
+    };
+  }>;
+  getPlantDetails: (id: string) => Promise<{
+    id: string;
+    name: string;
+    scientificName: string;
+    family: string | null;
+    genus: string | null;
+    imageUrl: string | null;
+    year: number | null;
+    edible: boolean | null;
+    ediblePart: string[] | null;
+    edibleDescription: string | null;
+    distribution: string | null;
+    flower: any;
+    foliage: any;
+    fruitOrSeed: any;
+    specifications: any;
+    growth: any;
+    links: any;
+  }>;
+  getPlantCare: (id: string) => Promise<{
+    plant: {
+      id: string;
+      name: string;
+      scientificName: string;
+      imageUrl: string | null;
+    };
+    recommendations: Array<{ type: string; message: string; icon: string }>;
+    growthData: any;
   }>;
 }
 
@@ -47,12 +118,12 @@ interface ApiService {
 const apiService: ApiService = {
   // Plants
   getPlants: async () => {
-    const response = await api.get<PlantWithRoom[]>('/plants');
+    const response = await api.get<PlantWithRoom[]>("/plants");
     return response.data;
   },
 
   getPlantsSortedByWatering: async () => {
-    const response = await api.get<PlantWithRoom[]>('/plants/sorted/watering');
+    const response = await api.get<PlantWithRoom[]>("/plants/sorted/watering");
     return response.data;
   },
 
@@ -61,8 +132,8 @@ const apiService: ApiService = {
     return response.data;
   },
 
-  createPlant: async (plant: Omit<Plant, 'id'>) => {
-    const response = await api.post<Plant>('/plants', plant);
+  createPlant: async (plant: Omit<Plant, "id">) => {
+    const response = await api.post<Plant>("/plants", plant);
     return response.data;
   },
 
@@ -87,7 +158,7 @@ const apiService: ApiService = {
 
   // Rooms
   getRooms: async () => {
-    const response = await api.get<Room[]>('/rooms');
+    const response = await api.get<Room[]>("/rooms");
     return response.data;
   },
 
@@ -96,8 +167,8 @@ const apiService: ApiService = {
     return response.data;
   },
 
-  createRoom: async (room: Omit<Room, 'id'>) => {
-    const response = await api.post<Room>('/rooms', room);
+  createRoom: async (room: Omit<Room, "id">) => {
+    const response = await api.post<Room>("/rooms", room);
     return response.data;
   },
 
@@ -112,14 +183,14 @@ const apiService: ApiService = {
 
   // Events
   getEvents: async (completed?: boolean) => {
-    const response = await api.get<CareEvent[]>('/events', {
+    const response = await api.get<CareEvent[]>("/events", {
       params: { completed },
     });
     return response.data;
   },
 
   getCalendarEvents: async (start: string, end: string) => {
-    const response = await api.get<CalendarEvent[]>('/calendar', {
+    const response = await api.get<CalendarEvent[]>("/calendar", {
       params: { start, end },
     });
     return response.data;
@@ -130,8 +201,8 @@ const apiService: ApiService = {
     return response.data;
   },
 
-  createEvent: async (event: Omit<CareEvent, 'id'>) => {
-    const response = await api.post<CareEvent>('/events', event);
+  createEvent: async (event: Omit<CareEvent, "id">) => {
+    const response = await api.post<CareEvent>("/events", event);
     return response.data;
   },
 
@@ -143,22 +214,40 @@ const apiService: ApiService = {
   },
 
   getUpcomingEvents: async () => {
-    const response = await api.get<CareEvent[]>('/calendar/upcoming');
+    const response = await api.get<CareEvent[]>("/calendar/upcoming");
     return response.data;
   },
 
   // Weather
   getWeather: async (lat: number, lon: number) => {
-    const response = await api.get<WeatherData>('/weather', {
+    const response = await api.get<WeatherData>("/weather", {
       params: { lat, lon },
     });
     return response.data;
   },
 
   getWeatherRecommendations: async (lat?: number, lon?: number) => {
-    const response = await api.get('/weather/recommendations', {
+    const response = await api.get("/weather/recommendations", {
       params: { lat, lon },
     });
+    return response.data;
+  },
+
+  // Trefle Plant Database
+  searchPlants: async (query: string, page = 1, limit = 20) => {
+    const response = await api.get("/trefle/search", {
+      params: { q: query, page, limit },
+    });
+    return response.data;
+  },
+
+  getPlantDetails: async (id: string) => {
+    const response = await api.get(`/trefle/plant/${id}`);
+    return response.data;
+  },
+
+  getPlantCare: async (id: string) => {
+    const response = await api.get(`/trefle/care/${id}`);
     return response.data;
   },
 };
@@ -172,14 +261,16 @@ interface ApiProviderProps {
 }
 
 export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
-  return <ApiContext.Provider value={apiService}>{children}</ApiContext.Provider>;
+  return (
+    <ApiContext.Provider value={apiService}>{children}</ApiContext.Provider>
+  );
 };
 
 // Custom hook to use the API
 export const useApi = (): ApiService => {
   const context = useContext(ApiContext);
   if (!context) {
-    throw new Error('useApi must be used within an ApiProvider');
+    throw new Error("useApi must be used within an ApiProvider");
   }
   return context;
 };

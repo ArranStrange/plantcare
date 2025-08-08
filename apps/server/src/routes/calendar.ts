@@ -1,6 +1,17 @@
 import express from "express";
 import { prisma } from "../index";
-import { CalendarEvent } from "@plantcare/types";
+
+// Define types locally to avoid dependency issues
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  plantId: string;
+  plantName: string;
+  type: "watering" | "fertilising" | "repotting";
+  completed: boolean;
+}
 
 const router = express.Router();
 
@@ -11,7 +22,11 @@ router.get("/", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
 
     if (!start || !end) {
@@ -76,7 +91,11 @@ router.get("/date/:date", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
 
     const targetDate = new Date(date);
@@ -134,7 +153,11 @@ router.get("/upcoming", async (req, res) => {
     let userId = req.query.userId as string;
     if (!userId) {
       const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
+      if (!defaultUser) {
+        // If no users exist, return empty array instead of error
+        return res.json([]);
+      }
+      userId = defaultUser.id;
     }
     const now = new Date();
     const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);

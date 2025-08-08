@@ -1,6 +1,12 @@
 import express from "express";
 import axios from "axios";
-import { WeatherData } from "@plantcare/types";
+
+// Define types locally to avoid dependency issues
+interface WeatherData {
+  humidity: number;
+  temperature: number;
+  rainedRecently: boolean;
+}
 import { prisma } from "../index";
 
 const router = express.Router();
@@ -77,11 +83,6 @@ router.get("/", async (req, res) => {
 router.get("/recommendations", async (req, res) => {
   try {
     const { lat, lon } = req.query;
-    let userId = req.query.userId as string;
-    if (!userId) {
-      const defaultUser = await prisma.user.findFirst();
-      userId = defaultUser?.id || "";
-    }
 
     // Get weather data (this would call the weather endpoint internally)
     const weatherData: WeatherData = {
@@ -89,6 +90,25 @@ router.get("/recommendations", async (req, res) => {
       temperature: Math.floor(Math.random() * 20) + 15,
       rainedRecently: Math.random() > 0.7,
     };
+
+    let userId = req.query.userId as string;
+    if (!userId) {
+      const defaultUser = await prisma.user.findFirst();
+      if (!defaultUser) {
+        // If no users exist, return empty recommendations
+        return res.json({
+          weather: weatherData,
+          recommendations: [
+            {
+              type: "info",
+              message: "No user found. Please create a user first.",
+              icon: "👤",
+            },
+          ],
+        });
+      }
+      userId = defaultUser.id;
+    }
 
     // Generate recommendations based on weather
     const recommendations = [];

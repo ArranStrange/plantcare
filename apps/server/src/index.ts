@@ -7,6 +7,9 @@ import eventsRouter from "./routes/events";
 import calendarRouter from "./routes/calendar";
 import weatherRouter from "./routes/weather";
 import roomsRouter from "./routes/rooms";
+import usersRouter from "./routes/users";
+import authRouter from "./routes/auth";
+import trefleRouter from "./routes/trefle";
 
 dotenv.config();
 
@@ -26,6 +29,9 @@ app.use("/api/events", eventsRouter);
 app.use("/api/calendar", calendarRouter);
 app.use("/api/weather", weatherRouter);
 app.use("/api/rooms", roomsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/trefle", trefleRouter);
 
 // Health check
 app.get("/api/health", (req, res) => {
