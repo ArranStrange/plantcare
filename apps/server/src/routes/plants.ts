@@ -15,17 +15,175 @@ router.get("/", async (req, res) => {
       userId = defaultUser?.id || "";
     }
 
+    const sortBy = req.query.sortBy as string || 'name';
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'asc';
+
+    let orderBy: any = { name: 'asc' };
+
+    if (sortBy === 'watering') {
+      // Sort by watering priority: overdue first, then due today, then by next water date
+      const plants = await prisma.plant.findMany({
+        where: { userId },
+        include: {
+          room: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      });
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const sortedPlants = plants.sort((a, b) => {
+        // Plants without next water date go last
+        if (!a.nextWaterDate && !b.nextWaterDate) return a.name.localeCompare(b.name);
+        if (!a.nextWaterDate) return 1;
+        if (!b.nextWaterDate) return -1;
+
+        const aDate = new Date(a.nextWaterDate);
+        const bDate = new Date(b.nextWaterDate);
+
+        // Overdue plants (before today) come first
+        const aOverdue = aDate < today;
+        const bOverdue = bDate < today;
+        
+        if (aOverdue && !bOverdue) return -1;
+        if (!aOverdue && bOverdue) return 1;
+        
+        // If both overdue, sort by how overdue they are (most overdue first)
+        if (aOverdue && bOverdue) {
+          return aDate.getTime() - bDate.getTime();
+        }
+
+        // Due today plants come next
+        const aDueToday = aDate >= today && aDate < tomorrow;
+        const bDueToday = bDate >= today && bDate < tomorrow;
+        
+        if (aDueToday && !bDueToday) return -1;
+        if (!aDueToday && bDueToday) return 1;
+
+        // Then sort by next water date (earliest first)
+        return aDate.getTime() - bDate.getTime();
+      });
+
+      const plantsWithRoom: PlantWithRoom[] = sortedPlants.map((plant) => ({
+        id: plant.id,
+        name: plant.name,
+        species: plant.species,
+        photoUrl: plant.photoUrl,
+        waterFrequency: plant.waterFrequency,
+        lastWatered: plant.lastWatered?.toISOString(),
+        nextWaterDate: plant.nextWaterDate?.toISOString(),
+        careNotes: plant.careNotes,
+        roomId: plant.roomId,
+        userId: plant.userId,
+        room: plant.room
+          ? {
+              id: plant.room.id,
+              name: plant.room.name,
+              userId: plant.room.userId,
+            }
+          : undefined,
+      }));
+
+      return res.json(plantsWithRoom);
+    } else {
+      // Default sorting by name or other fields
+      orderBy = { [sortBy]: sortOrder };
+      
+      const plants = await prisma.plant.findMany({
+        where: { userId },
+        include: {
+          room: true,
+        },
+        orderBy,
+      });
+
+      const plantsWithRoom: PlantWithRoom[] = plants.map((plant) => ({
+        id: plant.id,
+        name: plant.name,
+        species: plant.species,
+        photoUrl: plant.photoUrl,
+        waterFrequency: plant.waterFrequency,
+        lastWatered: plant.lastWatered?.toISOString(),
+        nextWaterDate: plant.nextWaterDate?.toISOString(),
+        careNotes: plant.careNotes,
+        roomId: plant.roomId,
+        userId: plant.userId,
+        room: plant.room
+          ? {
+              id: plant.room.id,
+              name: plant.room.name,
+              userId: plant.room.userId,
+            }
+          : undefined,
+      }));
+
+      res.json(plantsWithRoom);
+    }
+  } catch (error) {
+    console.error("Error fetching plants:", error);
+    res.status(500).json({ error: "Failed to fetch plants" });
+  }
+});
+
+// Get plants sorted by watering priority (convenience endpoint)
+router.get("/sorted/watering", async (req, res) => {
+  try {
+    let userId = req.query.userId as string;
+    if (!userId) {
+      const defaultUser = await prisma.user.findFirst();
+      userId = defaultUser?.id || "";
+    }
+
     const plants = await prisma.plant.findMany({
       where: { userId },
       include: {
         room: true,
       },
-      orderBy: {
-        name: "asc",
-      },
     });
 
-    const plantsWithRoom: PlantWithRoom[] = plants.map((plant) => ({
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const sortedPlants = plants.sort((a, b) => {
+      // Plants without next water date go last
+      if (!a.nextWaterDate && !b.nextWaterDate) return a.name.localeCompare(b.name);
+      if (!a.nextWaterDate) return 1;
+      if (!b.nextWaterDate) return -1;
+
+      const aDate = new Date(a.nextWaterDate);
+      const bDate = new Date(b.nextWaterDate);
+
+      // Overdue plants (before today) come first
+      const aOverdue = aDate < today;
+      const bOverdue = bDate < today;
+      
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+      
+      // If both overdue, sort by how overdue they are (most overdue first)
+      if (aOverdue && bOverdue) {
+        return aDate.getTime() - bDate.getTime();
+      }
+
+      // Due today plants come next
+      const aDueToday = aDate >= today && aDate < tomorrow;
+      const bDueToday = bDate >= today && bDate < tomorrow;
+      
+      if (aDueToday && !bDueToday) return -1;
+      if (!aDueToday && bDueToday) return 1;
+
+      // Then sort by next water date (earliest first)
+      return aDate.getTime() - bDate.getTime();
+    });
+
+    const plantsWithRoom: PlantWithRoom[] = sortedPlants.map((plant) => ({
       id: plant.id,
       name: plant.name,
       species: plant.species,
@@ -47,7 +205,7 @@ router.get("/", async (req, res) => {
 
     res.json(plantsWithRoom);
   } catch (error) {
-    console.error("Error fetching plants:", error);
+    console.error("Error fetching plants sorted by watering:", error);
     res.status(500).json({ error: "Failed to fetch plants" });
   }
 });

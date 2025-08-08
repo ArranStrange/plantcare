@@ -12,6 +12,7 @@ const api = axios.create({
 interface ApiService {
   // Plants
   getPlants: () => Promise<PlantWithRoom[]>;
+  getPlantsSortedByWatering: () => Promise<PlantWithRoom[]>;
   getPlant: (id: string) => Promise<Plant>;
   createPlant: (plant: Omit<Plant, 'id'>) => Promise<Plant>;
   updatePlant: (id: string, plant: Partial<Plant>) => Promise<Plant>;
@@ -47,6 +48,11 @@ const apiService: ApiService = {
   // Plants
   getPlants: async () => {
     const response = await api.get<PlantWithRoom[]>('/plants');
+    return response.data;
+  },
+
+  getPlantsSortedByWatering: async () => {
+    const response = await api.get<PlantWithRoom[]>('/plants/sorted/watering');
     return response.data;
   },
 

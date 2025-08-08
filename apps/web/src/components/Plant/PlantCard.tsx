@@ -15,10 +15,11 @@ import {
   Info as InfoIcon,
   Schedule as ScheduleIcon,
   Home as HomeIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { PlantWithRoom } from '@plantcare/types';
 import { statusColors } from '../../theme/plantCareTheme';
-import { format, isToday, isPast, parseISO } from 'date-fns';
+import { format, isToday, isPast, parseISO, formatDistanceToNow } from 'date-fns';
 
 interface PlantCardProps {
   plant: PlantWithRoom;
@@ -52,6 +53,23 @@ const PlantCard: React.FC<PlantCardProps> = ({
     return { status: 'upcoming', color: statusColors.upcoming };
   };
 
+  const getWateringPriorityText = () => {
+    if (!plant.nextWaterDate) return 'No schedule';
+    
+    const nextWater = parseISO(plant.nextWaterDate);
+    
+    if (isPast(nextWater) && !isToday(nextWater)) {
+      const daysOverdue = Math.ceil((Date.now() - nextWater.getTime()) / (1000 * 60 * 60 * 24));
+      return `${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue`;
+    }
+    
+    if (isToday(nextWater)) {
+      return 'Due today';
+    }
+    
+    return `Due in ${formatDistanceToNow(nextWater, { addSuffix: true })}`;
+  };
+
   const handleWaterClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onWater(plant.id);
@@ -67,6 +85,7 @@ const PlantCard: React.FC<PlantCardProps> = ({
   };
 
   const { status, color } = getPlantStatus();
+  const priorityText = getWateringPriorityText();
 
   return (
     <Box 
@@ -125,7 +144,7 @@ const PlantCard: React.FC<PlantCardProps> = ({
               </Box>
             )}
             
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <ScheduleIcon sx={{ fontSize: 16, mr: 0.5, color: 'text.secondary' }} />
               <Typography variant="caption" color="text.secondary">
                 {plant.nextWaterDate 
@@ -133,6 +152,29 @@ const PlantCard: React.FC<PlantCardProps> = ({
                   : 'Schedule watering'
                 }
               </Typography>
+            </Box>
+            
+            {/* Enhanced watering priority display */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <WaterIcon sx={{ 
+                fontSize: 16, 
+                mr: 0.5, 
+                color: status === 'overdue' ? 'error.main' : 
+                       status === 'due today' ? 'warning.main' : 'text.secondary' 
+              }} />
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: status === 'overdue' ? 'error.main' : 
+                         status === 'due today' ? 'warning.main' : 'text.secondary',
+                  fontWeight: status === 'overdue' || status === 'due today' ? 600 : 400,
+                }}
+              >
+                {priorityText}
+              </Typography>
+              {status === 'overdue' && (
+                <WarningIcon sx={{ fontSize: 14, ml: 0.5, color: 'error.main' }} />
+              )}
             </Box>
             
             <Chip

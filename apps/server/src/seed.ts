@@ -51,7 +51,7 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400",
       waterFrequency: 7,
-      lastWatered: addDays(now, -5),
+      lastWatered: addDays(now, -8), // Overdue by 1 day
       careNotes:
         "Loves bright, indirect light. Water when top inch of soil is dry.",
       roomId: livingRoom.id,
@@ -62,7 +62,7 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400",
       waterFrequency: 14,
-      lastWatered: addDays(now, -10),
+      lastWatered: addDays(now, -15), // Overdue by 1 day
       careNotes:
         "Very low maintenance. Can tolerate low light and infrequent watering.",
       roomId: bedroom.id,
@@ -73,7 +73,7 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1572688484438-313a6e50c333?w=400",
       waterFrequency: 5,
-      lastWatered: addDays(now, -3),
+      lastWatered: addDays(now, -5), // Due today
       careNotes:
         "Easy-going plant. Water when soil feels dry. Great for beginners.",
       roomId: kitchen.id,
@@ -84,7 +84,7 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1545239705-1564e58b1789?w=400",
       waterFrequency: 7,
-      lastWatered: addDays(now, -6),
+      lastWatered: addDays(now, -7), // Due today
       careNotes: "Likes bright, indirect light. Provide support for climbing.",
       roomId: livingRoom.id,
     },
@@ -94,7 +94,7 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1542052459-4d6c7d3b97ac?w=400",
       waterFrequency: 10,
-      lastWatered: addDays(now, -8),
+      lastWatered: addDays(now, -8), // Due in 2 days
       careNotes: "Glossy leaves that need regular cleaning. Water moderately.",
       roomId: bedroom.id,
     },
@@ -104,9 +104,31 @@ async function main() {
       photoUrl:
         "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
       waterFrequency: 5,
-      lastWatered: addDays(now, -2),
+      lastWatered: addDays(now, -3), // Due in 2 days
       careNotes:
         "Droops when thirsty - a great indicator plant! Loves humidity.",
+      roomId: kitchen.id,
+    },
+    {
+      name: "ZZ Plant",
+      species: "Zamioculcas zamiifolia",
+      photoUrl:
+        "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400",
+      waterFrequency: 21,
+      lastWatered: addDays(now, -25), // Overdue by 4 days
+      careNotes:
+        "Extremely low maintenance. Can go weeks without water.",
+      roomId: bedroom.id,
+    },
+    {
+      name: "Aloe Vera",
+      species: "Aloe barbadensis",
+      photoUrl:
+        "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400",
+      waterFrequency: 14,
+      lastWatered: addDays(now, -12), // Due in 2 days
+      careNotes:
+        "Succulent that stores water in leaves. Water sparingly.",
       roomId: kitchen.id,
     },
   ];
