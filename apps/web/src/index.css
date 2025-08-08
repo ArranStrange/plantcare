@@ -1,0 +1,154 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f6f1;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a8cbb7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7fac9b;
+}
+
+/* Calendar styles */
+.rbc-calendar {
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.rbc-event {
+  background-color: #a8cbb7;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.rbc-event.overdue {
+  background-color: #e85c5c;
+}
+
+.rbc-event.due-today {
+  background-color: #e8b444;
+}
+
+.rbc-event.completed {
+  background-color: #7bb3d9;
+}
+
+.rbc-toolbar {
+  margin-bottom: 16px;
+}
+
+.rbc-toolbar button {
+  background-color: transparent;
+  border: 1px solid #a8cbb7;
+  color: #6d6a75;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #a8cbb7;
+  color: white;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #a8cbb7;
+  color: white;
+}
+
+/* Plant card flip animation */
+.plant-card {
+  perspective: 1000px;
+}
+
+.plant-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.plant-card.flipped .plant-card-inner {
+  transform: rotateY(180deg);
+}
+
+.plant-card-front,
+.plant-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 16px;
+}
+
+.plant-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Loading skeleton */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  animation-duration: 1.5s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+  background: #f6f7f8;
+  background: linear-gradient(to right, #eeeeee 8%, #dddddd 18%, #eeeeee 33%);
+  background-size: 800px 104px;
+  height: 20px;
+  position: relative;
+  border-radius: 4px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rbc-toolbar-label {
+    order: -1;
+    margin-bottom: 8px;
+  }
+}

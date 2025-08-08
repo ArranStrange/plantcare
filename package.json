@@ -1,0 +1,26 @@
+{
+  "name": "plantcare",
+  "version": "1.0.0",
+  "description": "A fullstack monorepo for tracking houseplant care with weather integration",
+  "private": true,
+  "scripts": {
+    "dev:all": "pnpm --parallel --recursive run dev",
+    "dev:web": "pnpm --filter web run dev",
+    "dev:server": "pnpm --filter server run dev",
+    "build": "pnpm --recursive run build",
+    "lint": "pnpm --recursive run lint",
+    "typecheck": "pnpm --recursive run typecheck",
+    "db:generate": "pnpm --filter server run db:generate",
+    "db:push": "pnpm --filter server run db:push",
+    "db:seed": "pnpm --filter server run db:seed"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.0.0"
+} 
